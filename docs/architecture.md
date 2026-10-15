@@ -30,20 +30,21 @@ OctoFit Tracker is a three-tier application for a school fitness program. The st
 
 Record your plan here before editing code.
 
-- Presentation tier decision:
-- Logic tier decision:
-- Data tier decision:
-- Activity tracking approach:
-- Team management approach:
-- Leaderboard approach:
-- Workout suggestions approach:
+- Presentation tier decision: Keep React components responsible for rendering and user interaction. Load API data through the shared client using relative `/api` paths; let Vite proxy requests to the private Express port. Each capability shows loading, success, empty, and accessible error states.
+- Logic tier decision: Keep endpoint wiring and HTTP status/response formatting in Express routes. Put validation, persistence orchestration, scoring, aggregation, and recommendation selection in the TypeScript service layer. Return deliberate 4xx responses for invalid input, malformed or missing references, and unknown users; do not expose Mongoose cast errors as 500 responses.
+- Data tier decision: Define required fields, defaults, and ObjectId references in Mongoose schemas. Keep seed data representative across all four capabilities, use stable keys/upserts so repeated runs are idempotent, and never delete or overwrite unrelated records.
+- Activity tracking approach: Validate the request shape and both IDs before writing. Confirm that the referenced user and team exist, then save the activity with those references, its type and minutes, computed points at one point per minute, and an occurrence timestamp. List persisted activities through the API.
+- Team management approach: Require a non-empty name and mascot, default members to an empty array, and persist submitted members as user references. List teams with their names, mascots, and member IDs intact.
+- Leaderboard approach: Aggregate activity points by team, include teams with no activity at zero points, sort by total points descending, and assign 1-based ranks in the returned response.
+- Workout suggestions approach: Find the user by email; return a deliberate 4xx if there is no match. Prefer workouts matching the user's fitness goal or recent activity pattern, and include a short reason for the first recommendation.
 
 ## Test plan
 
-Record the commands you run and what each failure means.
+Run these checks in dependency order. A failure should be diagnosed in the named tier before moving on; do not weaken a contract to make a later tier pass.
 
-- Data-tier command: `npm run test:data --prefix octofit-tracker/backend`
-- API command: `npm run test:api --prefix octofit-tracker/backend`
-- Frontend command: `npm test --prefix octofit-tracker/frontend`
-- Backend build command: `npm run build --prefix octofit-tracker/backend`
-- Frontend build command: `npm run build --prefix octofit-tracker/frontend`
+- Data tier: `npm run test:data --prefix octofit-tracker/backend` checks required model fields, references/defaults, and repeatable seed behavior that preserves unrelated data. Failures point to schemas or seed logic.
+- Logic/API tier: `npm run test:api --prefix octofit-tracker/backend` checks activity and team validation/create/list behavior, leaderboard totals and ordering, and user-specific workout recommendations. Failures point to service behavior, route responses, or their persistence integration.
+- Presentation tier: `npm test --prefix octofit-tracker/frontend` checks API-backed rendering, the requested workout user, and loading, empty, and accessible error states for each route. Failures point to component behavior or shared API-client usage.
+- Backend typecheck: `npm run build --prefix octofit-tracker/backend` runs the TypeScript compiler without emitting files; failures indicate backend type or module-contract issues.
+- Frontend typecheck and production build: `npm run build --prefix octofit-tracker/frontend` runs TypeScript checking and Vite bundling; failures indicate frontend type, import, or build integration issues.
+- Final regression check: `npm test --prefix octofit-tracker/backend` runs both backend contract suites together after the targeted checks pass.
