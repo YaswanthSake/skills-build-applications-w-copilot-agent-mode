@@ -40,11 +40,11 @@ Record your plan here before editing code.
 
 ## Test plan
 
-Run these checks in dependency order. A failure should be diagnosed in the named tier before moving on; do not weaken a contract to make a later tier pass.
+Implement and validate one tier at a time. Complete the data models and seed behavior first, then the API services and routes, then the presentation components and shared client. Do not start the next tier until the current tier's focused contract tests pass. Preserve the documented contracts; do not weaken tests to accommodate an incomplete implementation.
 
 - Data tier: `npm run test:data --prefix octofit-tracker/backend` checks required model fields, references/defaults, and repeatable seed behavior that preserves unrelated data. Failures point to schemas or seed logic.
 - Logic/API tier: `npm run test:api --prefix octofit-tracker/backend` checks activity and team validation/create/list behavior, leaderboard totals and ordering, and user-specific workout recommendations. Failures point to service behavior, route responses, or their persistence integration.
-- Presentation tier: `npm test --prefix octofit-tracker/frontend` checks API-backed rendering, the requested workout user, and loading, empty, and accessible error states for each route. Failures point to component behavior or shared API-client usage.
 - Backend typecheck: `npm run build --prefix octofit-tracker/backend` runs the TypeScript compiler without emitting files; failures indicate backend type or module-contract issues.
+- Presentation tier: `npm test --prefix octofit-tracker/frontend` checks API-backed rendering, the requested workout user, and loading, empty, and accessible error states for each route. Failures point to component behavior or shared API-client usage.
 - Frontend typecheck and production build: `npm run build --prefix octofit-tracker/frontend` runs TypeScript checking and Vite bundling; failures indicate frontend type, import, or build integration issues.
 - Final regression check: `npm test --prefix octofit-tracker/backend` runs both backend contract suites together after the targeted checks pass.
